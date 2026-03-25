@@ -1,0 +1,12 @@
+.git
+.gitignore
+.gocache
+.gomodcache
+.gotmp
+
+.DS_Store
+*.log
+
+README.md
+CHANGELOG.md
+Makefile
