@@ -93,6 +93,7 @@ const (
 	CodeX509SVIDNotCached   = "CIS_X509_SVID_NOT_CACHED"
 	CodeJWTBundlesNotCached = "CIS_JWT_BUNDLES_NOT_CACHED"
 	CodeX509BundleNotCached = "CIS_X509_BUNDLE_NOT_CACHED"
+	CodeJWTTokenInvalid     = "CIS_JWT_TOKEN_INVALID"
 )
 
 type Error struct {

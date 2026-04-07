@@ -151,6 +151,7 @@ const (
 	CodeX509SVIDNotCached   = api.CodeX509SVIDNotCached
 	CodeJWTBundlesNotCached = api.CodeJWTBundlesNotCached
 	CodeX509BundleNotCached = api.CodeX509BundleNotCached
+	CodeJWTTokenInvalid     = api.CodeJWTTokenInvalid
 )
 
 // Error is the public SDK error type. Callers can inspect Code to classify
@@ -210,6 +211,13 @@ func (h *Helper) GetX509Bundle() (*X509BundleSet, error) {
 // GetTlsConfig builds a client tls.Config backed by cached X.509 material.
 func (h *Helper) GetTlsConfig() (*tls.Config, error) {
 	return h.impl.GetTLSConfig()
+}
+
+// VerifyToken validates a JWT token against cached JWT bundles. When
+// trustedLabel is non-empty, the label extracted from the token subject path
+// must match it exactly.
+func (h *Helper) VerifyToken(token string, trustedLabel string) error {
+	return h.impl.VerifyToken(token, trustedLabel)
 }
 
 // Close stops background refresh and releases SDK resources.

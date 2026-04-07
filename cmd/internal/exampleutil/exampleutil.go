@@ -89,6 +89,14 @@ func OutputDirFromEnv() string {
 	return os.Getenv("CIS_HELPER_OUTPUT_DIR")
 }
 
+func TokenToVerifyFromEnv() string {
+	return strings.TrimSpace(os.Getenv("CIS_HELPER_VERIFY_TOKEN"))
+}
+
+func TrustedTokenLabelFromEnv() string {
+	return strings.TrimSpace(os.Getenv("CIS_HELPER_TRUSTED_TOKEN_LABEL"))
+}
+
 func FetchIdentityAndWriteOutput(helper *cishelper.Helper) error {
 	x509SVID, err := helper.GetX509SVID()
 	if err != nil {

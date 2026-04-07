@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -9,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-jose/go-jose/v4"
+	gojwt "github.com/go-jose/go-jose/v4/jwt"
 	"github.com/spiffe/go-spiffe/v2/bundle/jwtbundle"
 	"github.com/spiffe/go-spiffe/v2/bundle/x509bundle"
 	"github.com/spiffe/go-spiffe/v2/spiffeid"
@@ -201,6 +206,50 @@ func TestGetTLSConfigIncludesDynamicServerAndClientHooksForMTLS(t *testing.T) {
 	}
 	if !got.InsecureSkipVerify {
 		t.Fatal("expected InsecureSkipVerify for SPIFFE peer verification flow")
+	}
+}
+
+func TestVerifyTokenAcceptsValidTokenWithoutTrustedLabel(t *testing.T) {
+	td := spiffeid.RequireTrustDomainFromString("example.org")
+	token := makeSignedToken(t, "kid-1", "spiffe://example.org/p_test/r_demo/k_ksn001/instance-1", time.Now().Add(time.Minute))
+	helper := newTokenTestHelper(td, map[string]crypto.PublicKey{"kid-1": token.publicKey})
+
+	if err := helper.VerifyToken(token.serialized, ""); err != nil {
+		t.Fatalf("VerifyToken failed: %v", err)
+	}
+}
+
+func TestVerifyTokenRejectsTrustedLabelMismatch(t *testing.T) {
+	td := spiffeid.RequireTrustDomainFromString("example.org")
+	token := makeSignedToken(t, "kid-1", "spiffe://example.org/p_test/r_demo/k_ksn001/instance-1", time.Now().Add(time.Minute))
+	helper := newTokenTestHelper(td, map[string]crypto.PublicKey{"kid-1": token.publicKey})
+
+	err := helper.VerifyToken(token.serialized, "ksn002/instance-1")
+	if err == nil {
+		t.Fatal("expected trusted label mismatch")
+	}
+}
+
+func TestVerifyTokenRejectsExpiredToken(t *testing.T) {
+	td := spiffeid.RequireTrustDomainFromString("example.org")
+	token := makeSignedToken(t, "kid-1", "spiffe://example.org/p_test/r_demo/k_ksn001/instance-1", time.Now().Add(-time.Minute))
+	helper := newTokenTestHelper(td, map[string]crypto.PublicKey{"kid-1": token.publicKey})
+
+	err := helper.VerifyToken(token.serialized, "ksn001/instance-1")
+	if err == nil {
+		t.Fatal("expected expired token error")
+	}
+}
+
+func TestVerifyTokenRejectsSignatureMismatch(t *testing.T) {
+	td := spiffeid.RequireTrustDomainFromString("example.org")
+	token := makeSignedToken(t, "kid-1", "spiffe://example.org/p_test/r_demo/k_ksn001/instance-1", time.Now().Add(time.Minute))
+	other := makeSignedToken(t, "kid-1", "spiffe://example.org/p_test/r_demo/k_ksn001/instance-1", time.Now().Add(time.Minute))
+	helper := newTokenTestHelper(td, map[string]crypto.PublicKey{"kid-1": other.publicKey})
+
+	err := helper.VerifyToken(token.serialized, "ksn001/instance-1")
+	if err == nil {
+		t.Fatal("expected signature mismatch error")
 	}
 }
 
@@ -416,6 +465,54 @@ type fakeFetcher struct {
 	bundlesErr error
 	jwtSVIDs   map[string]*jwtsvid.SVID
 	jwtErr     error
+}
+
+type signedTokenFixture struct {
+	serialized string
+	publicKey  crypto.PublicKey
+}
+
+func newTokenTestHelper(td spiffeid.TrustDomain, authorities map[string]crypto.PublicKey) *Helper {
+	bundle := jwtbundle.NewSet(jwtbundle.FromJWTAuthorities(td, authorities))
+	return &Helper{
+		cfg:     withDefaults(api.Config{TrustDomain: td.String()}),
+		logger:  observability.WithLoggerDefaults(nil, "cis-helper", "test"),
+		metrics: observability.NewRecorder("test", nil),
+		state: &cache.State{
+			JWTBundles: bundle,
+		},
+	}
+}
+
+func makeSignedToken(t *testing.T, keyID string, subject string, expiry time.Time) signedTokenFixture {
+	t.Helper()
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("generate rsa key failed: %v", err)
+	}
+	signer, err := jose.NewSigner(jose.SigningKey{
+		Algorithm: jose.RS256,
+		Key: jose.JSONWebKey{
+			Key:   privateKey,
+			KeyID: keyID,
+		},
+	}, nil)
+	if err != nil {
+		t.Fatalf("new signer failed: %v", err)
+	}
+	serialized, err := gojwt.Signed(signer).Claims(gojwt.Claims{
+		Subject:  subject,
+		Expiry:   gojwt.NewNumericDate(expiry),
+		IssuedAt: gojwt.NewNumericDate(time.Now().Add(-time.Minute)),
+	}).Serialize()
+	if err != nil {
+		t.Fatalf("serialize token failed: %v", err)
+	}
+	return signedTokenFixture{
+		serialized: serialized,
+		publicKey:  &privateKey.PublicKey,
+	}
 }
 
 func (f *fakeFetcher) FetchJWTSVID(_ context.Context, params jwtsvid.Params) (*jwtsvid.SVID, error) {

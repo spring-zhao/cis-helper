@@ -330,6 +330,7 @@ SDK 刷新遵循以下规则：
 - `cmd/fetch-svid`
 - `cmd/https-server`
 - `cmd/https-client`
+- `cmd/verify-token`
 
 ### 8.1 fetch-svid
 
@@ -403,6 +404,37 @@ http://127.0.0.1:6060/debug/pprof/
 
 - `CIS_HELPER_HTTPS_CLIENT_IP`
 - `CIS_HELPER_HTTPS_CLIENT_PORT`
+
+### 8.4 verify-token
+
+`verify-token` 用于演示 `helper.VerifyToken()` 的调用方式。
+
+额外支持：
+
+- `CIS_HELPER_VERIFY_TOKEN`
+- `CIS_HELPER_TRUSTED_TOKEN_LABEL`
+
+说明：
+
+- `CIS_HELPER_VERIFY_TOKEN`：待校验的 JWT token
+- `CIS_HELPER_TRUSTED_TOKEN_LABEL`：可选，格式为 `<ksn>/<instance-id>`
+
+示例：
+
+```sh
+CIS_HELPER_SOURCE_MODE=disk \
+CIS_HELPER_INPUT_DIR=./out \
+CIS_HELPER_VERIFY_TOKEN="$(cat ./out/jwt-svid.token)" \
+go run ./cmd/verify-token
+```
+
+```sh
+CIS_HELPER_SOURCE_MODE=disk \
+CIS_HELPER_INPUT_DIR=./out \
+CIS_HELPER_VERIFY_TOKEN="$(cat ./out/jwt-svid.token)" \
+CIS_HELPER_TRUSTED_TOKEN_LABEL="ksn001/instance-1" \
+go run ./cmd/verify-token
+```
 
 ## 9. 推荐接入建议
 

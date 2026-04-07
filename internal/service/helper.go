@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -214,6 +215,56 @@ func (h *Helper) GetJWTBundle() (*api.JWTBundleSet, error) {
 
 	h.finishAPICall("get_jwt_bundle", start, nil)
 	return out, nil
+}
+
+func (h *Helper) VerifyToken(token string, trustedLabel string) error {
+	start := time.Now()
+	h.logger.Info("VerifyToken called", "trusted_label", trustedLabel)
+
+	h.mu.RLock()
+	closed := h.closed
+	jwtBundles := h.state.JWTBundles
+	h.mu.RUnlock()
+
+	if closed {
+		err := api.WrapError(api.CodeClosed, "helper already closed", nil)
+		h.finishAPICall("verify_token", start, err)
+		return err
+	}
+	if jwtBundles == nil {
+		err := api.WrapError(api.CodeJWTBundlesNotCached, "JWT bundles are not cached", nil)
+		h.finishAPICall("verify_token", start, err)
+		return err
+	}
+	if strings.TrimSpace(token) == "" {
+		err := api.WrapError(api.CodeJWTTokenInvalid, "token must not be empty", nil)
+		h.finishAPICall("verify_token", start, err)
+		return err
+	}
+
+	svid, err := jwtsvid.ParseAndValidate(token, jwtBundles, nil)
+	if err != nil {
+		err = api.WrapError(api.CodeJWTTokenInvalid, "token validation failed", err)
+		h.finishAPICall("verify_token", start, err)
+		return err
+	}
+
+	if trustedLabel != "" {
+		subjectLabel, err := trustedLabelFromSPIFFEID(svid.ID)
+		if err != nil {
+			err = api.WrapError(api.CodeJWTTokenInvalid, "token subject label is invalid", err)
+			h.finishAPICall("verify_token", start, err)
+			return err
+		}
+		if subjectLabel != trustedLabel {
+			err = api.WrapError(api.CodeJWTTokenInvalid, fmt.Sprintf("token subject label %q does not match trusted label %q", subjectLabel, trustedLabel), nil)
+			h.finishAPICall("verify_token", start, err)
+			return err
+		}
+	}
+
+	h.finishAPICall("verify_token", start, nil)
+	return nil
 }
 
 func (h *Helper) GetX509SVID() (*api.X509SVID, error) {
@@ -443,4 +494,23 @@ func isSelfSignedRoot(cert *x509.Certificate) bool {
 		return false
 	}
 	return bytes.Equal(cert.RawSubject, cert.RawIssuer)
+}
+
+func trustedLabelFromSPIFFEID(id spiffeid.ID) (string, error) {
+	path := strings.TrimPrefix(id.Path(), "/")
+	segments := strings.Split(path, "/")
+	if len(segments) != 4 {
+		return "", fmt.Errorf("unexpected subject path %q", id.Path())
+	}
+	if !strings.HasPrefix(segments[2], "k_") {
+		return "", fmt.Errorf("unexpected ksn segment %q", segments[2])
+	}
+	ksn := strings.TrimPrefix(segments[2], "k_")
+	if ksn == "" {
+		return "", fmt.Errorf("ksn segment is empty")
+	}
+	if segments[3] == "" {
+		return "", fmt.Errorf("instance id segment is empty")
+	}
+	return ksn + "/" + segments[3], nil
 }
