@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"time"
 
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/observability"
+	"github.com:spring-zhao/cis-helper/internal/observability"
 )
 
 type Config struct {

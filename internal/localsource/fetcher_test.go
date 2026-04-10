@@ -3,7 +3,7 @@ package localsource
 import (
 	"testing"
 
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/api"
+	"github.com:spring-zhao/cis-helper/internal/api"
 )
 
 func TestMemoryFetcherLoadIdentityDataUsesLatestLoaderValue(t *testing.T) {

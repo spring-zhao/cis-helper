@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/cmd/internal/exampleutil"
+	"github.com:spring-zhao/cis-helper/cmd/internal/exampleutil"
 )
 
 func main() {

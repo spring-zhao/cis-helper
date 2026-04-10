@@ -12,7 +12,7 @@ import (
 	"github.com/spiffe/go-spiffe/v2/svid/jwtsvid"
 	"github.com/spiffe/go-spiffe/v2/svid/x509svid"
 
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/api"
+	"github.com:spring-zhao/cis-helper/internal/api"
 )
 
 type MemoryFetcher struct {

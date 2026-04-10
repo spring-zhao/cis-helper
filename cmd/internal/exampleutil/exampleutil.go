@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	cishelper "git.corp.kuaishou.com/corpsec/nhi/cis-helper"
+	cishelper "github.com:spring-zhao/cis-helper"
 )
 
 const (

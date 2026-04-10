@@ -1,4 +1,4 @@
-module git.corp.kuaishou.com/corpsec/nhi/cis-helper
+module github.com:spring-zhao/cis-helper
 
 go 1.24.0
 

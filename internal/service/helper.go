@@ -18,12 +18,12 @@ import (
 	"github.com/spiffe/go-spiffe/v2/svid/jwtsvid"
 	"github.com/spiffe/go-spiffe/v2/svid/x509svid"
 
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/api"
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/cache"
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/localsource"
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/observability"
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/runtime"
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/workloadclient"
+	"github.com:spring-zhao/cis-helper/internal/api"
+	"github.com:spring-zhao/cis-helper/internal/cache"
+	"github.com:spring-zhao/cis-helper/internal/localsource"
+	"github.com:spring-zhao/cis-helper/internal/observability"
+	"github.com:spring-zhao/cis-helper/internal/runtime"
+	"github.com:spring-zhao/cis-helper/internal/workloadclient"
 )
 
 type identityFetcher interface {

@@ -7,7 +7,7 @@ import (
 	"github.com/spiffe/go-spiffe/v2/spiffeid"
 	"github.com/spiffe/go-spiffe/v2/svid/jwtsvid"
 
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/api"
+	"github.com:spring-zhao/cis-helper/internal/api"
 )
 
 const (

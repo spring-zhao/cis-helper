@@ -20,9 +20,9 @@ import (
 	"github.com/spiffe/go-spiffe/v2/svid/jwtsvid"
 	"github.com/spiffe/go-spiffe/v2/svid/x509svid"
 
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/api"
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/cache"
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/observability"
+	"github.com:spring-zhao/cis-helper/internal/api"
+	"github.com:spring-zhao/cis-helper/internal/cache"
+	"github.com:spring-zhao/cis-helper/internal/observability"
 )
 
 func TestRefreshFailureKeepsOldCache(t *testing.T) {

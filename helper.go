@@ -11,9 +11,9 @@ import (
 
 	"github.com/spiffe/go-spiffe/v2/svid/jwtsvid"
 
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/api"
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/observability"
-	"git.corp.kuaishou.com/corpsec/nhi/cis-helper/internal/service"
+	"github.com:spring-zhao/cis-helper/internal/api"
+	"github.com:spring-zhao/cis-helper/internal/observability"
+	"github.com:spring-zhao/cis-helper/internal/service"
 )
 
 // Config configures helper initialization, identity loading, refresh behavior,
